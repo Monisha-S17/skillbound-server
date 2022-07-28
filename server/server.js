@@ -31,6 +31,30 @@ app.get('/userDetails', (req, res) => {
   // res.json({results});
 });
 
+app.post("/dashboard", (req, res) => {
+  console.log(req);
+
+  const emailId = req.body.email;
+  const password = req.body.password;
+
+  console.log(emailId+","+password);
+
+  // connection.query(
+  const sql = `SELECT * FROM skill_users WHERE emailid = "${emailId}" AND password = "${password}"`;
+      console.log(sql);
+
+   connection.query(sql,  (err, result, fields) => {
+      if (err) {
+        console.log(err.message);
+      } else {
+        //console.log(results);
+        res.json(result);
+      }
+  });
+// //  )  
+//   res.json({results});
+});
+
 // get category data
 app.get('/category/', (req, res) => {
   connection.query(
