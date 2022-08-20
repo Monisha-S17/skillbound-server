@@ -402,48 +402,48 @@ app.get("/getSkillSale/:userId", (req, res) => {
 });
 
 // add skill sale data
-// app.post("/addSaleSkill", (req, res) => {
-//   const user_id = req.body.userId;
-//   const className = req.body.className;
-//   const skillName = req.body.skillName;  
-//   const currency = req.body.currency;
-//   const payment = req.body.payment;
-//   const videoFile = req.body.videoFile;
-//   const serviceOffer = req.body.serviceOffer;  
+app.post("/addSaleSkill", (req, res) => {
+  const user_id = req.body.userId;
+  const className = req.body.className;
+  const skillName = req.body.skillName;  
+  const currency = req.body.currency;
+  const payment = req.body.payment;
+  const videoFile = req.body.videoFile;
+  const serviceOffer = req.body.serviceOffer;  
 
-//   const sql = `INSERT INTO  onlineclass_reg (user_id, classname	, conductedby, currency,payment, videotutorial,skills) VALUES (${user_id},"${className}", "${serviceOffer}", "${currency}", "${payment}","${videoFile}","${skillName}" )`;
-//   console.log(sql);
-//   connection.query(sql, function (err, results, fields) {
-//     if (err) {
-//       console.log(err.message);
-//     } else {
-//       // console.log(results);
-//       res.json("Want Skill Added Successfully");
-//     }
-//   });
-// });
-
-app.post('/addSaleSkill', function(req, res) {
-  let sampleFile;
-  let uploadPath;
-  console.log(req.body.videoFile);
-
-  // if (!req.files || Object.keys(req.files).length === 0) {
-  //   return res.status(400).send('No files were uploaded.');
-  // }
-
-  // The name of the input field (i.e. "sampleFile") is used to retrieve the uploaded file
-  sampleFile = req.body.videoFile;
-  uploadPath = __dirname + '/upload/' + sampleFile;
-  console.log(uploadPath);
-  // Use the mv() method to place the file somewhere on your server
-  sampleFile.mv(uploadPath, function(err) {
-    if (err)
-      return res.status(500).send(err);
-
-    res.send('File uploaded!');
+  const sql = `INSERT INTO  onlineclass_reg (user_id, classname	, conductedby, currency,payment, videotutorial,skills) VALUES (${user_id},"${className}", "${serviceOffer}", "${currency}", "${payment}","${videoFile}","${skillName}" )`;
+  console.log(sql);
+  connection.query(sql, function (err, results, fields) {
+    if (err) {
+      console.log(err.message);
+    } else {
+      // console.log(results);
+      res.json("Want Skill Added Successfully");
+    }
   });
 });
+
+// app.post('/addSaleSkill', function(req, res) {
+//   let sampleFile;
+//   let uploadPath;
+//   console.log(req.body.videoFile);
+
+//   // if (!req.files || Object.keys(req.files).length === 0) {
+//   //   return res.status(400).send('No files were uploaded.');
+//   // }
+
+//   // The name of the input field (i.e. "sampleFile") is used to retrieve the uploaded file
+//   sampleFile = req.body.videoFile;
+//   uploadPath = __dirname + '/upload/' + sampleFile;
+//   console.log(uploadPath);
+//   // Use the mv() method to place the file somewhere on your server
+//   sampleFile.mv(uploadPath, function(err) {
+//     if (err)
+//       return res.status(500).send(err);
+
+//     res.send('File uploaded!');
+//   });
+// });
 
 
 
