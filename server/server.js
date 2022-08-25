@@ -3,6 +3,9 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const mysql = require("mysql2");
 const fileUpload = require('express-fileupload');
+const multer  = require('multer')
+const { uuid } = require('uuidv4');
+const  path = require('path');
 
 
 const connection = mysql.createConnection({
@@ -17,6 +20,7 @@ const config = {
   origin: "http://localhost:4200",
 };
 app.use(express.json());
+app.use(express.static('puplic'))
 app.use(cors(config));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
@@ -59,9 +63,12 @@ app.post("/dashboard", (req, res) => {
 
 // get category data
 app.get("/category/", (req, res) => {
+  
   connection.query(
     "SELECT * FROM `categories` ORDER BY `cat_name` ASC",
+    
     function (err, results, fields) {
+      
       res.json(results);
     }
   );
@@ -401,26 +408,94 @@ app.get("/getSkillSale/:userId", (req, res) => {
   });
 });
 
+// var Storage = multer.diskStorage({
+//   destination: function(req, file, callback) {
+//   var pathname = req.file.originalname;
+//   console.log(pathname);
+//   var path = pathname[0].replace('_','/');
+//   console.log(path);
+//   cb(null,'./upload'+pathname);
+//   },
+//   filename: function(req, file, callback) {
+//   var pathname = file.originalname;
+//   var filename = pathname[1];
+//   if(pathname!=undefined)
+//   callback(null, pathname);
+//   }
+//   });
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb)=>{
+    cb(null, './upload')
+  },
+  filename: (req,file, cb)=>{
+    console.log(file);
+    cb(null,Date.now() + path.extname(file.originalname))
+
+  }
+})
+  const upload = multer({ storage: storage });
+
+
 // add skill sale data
-app.post("/addSaleSkill", (req, res) => {
+// app.post("/addSaleSkill",multer({dest:'./upload/'}).single('file'),  (req, res) => {
+//   console.log(req.body);
+//   const user_id = req.body.userId;
+//   const className = req.body.className;
+//   const skillName = req.body.skillName;  
+//   const currency = req.body.currency;
+//   const payment = req.body.payment;
+//   const videoFile = req.body.file;
+//   const serviceOffer = req.body.serviceOffer;  
+//   console.log(videoFile);
+//   const sql = `INSERT INTO  onlineclass_reg (user_id, classname, conductedby, currency,payment, videotutorial,skills) VALUES (${user_id},"${className}", "${serviceOffer}", "${currency}", "${payment}","${videoFile}","${skillName}" )`;
+//   console.log(sql);
+//   connection.query(sql, function (err, results, fields) {
+//     if (err) {
+//       console.log(err.message);
+//     } else {
+//       // console.log(results);
+//       res.json("Want Skill Added Successfully");
+//     }
+//   });
+// });
+
+app.post("/addSaleSkill",(req,res)=>{
+  var fileName;
+    if(req.files){
+      
+      var file = req.files.file;
+      fileName = file.name;
+      console.log(fileName);
+      file.mv('./upload/video/'+fileName,function(err){
+        if (err){          
+            res.send(err);          
+        }else{
+          res.send("file Uploaded")
+        }
+
+      })
+    
+    }
+    
   const user_id = req.body.userId;
   const className = req.body.className;
   const skillName = req.body.skillName;  
   const currency = req.body.currency;
   const payment = req.body.payment;
-  const videoFile = req.body.videoFile;
-  const serviceOffer = req.body.serviceOffer;  
-
-  const sql = `INSERT INTO  onlineclass_reg (user_id, classname	, conductedby, currency,payment, videotutorial,skills) VALUES (${user_id},"${className}", "${serviceOffer}", "${currency}", "${payment}","${videoFile}","${skillName}" )`;
-  console.log(sql);
-  connection.query(sql, function (err, results, fields) {
-    if (err) {
-      console.log(err.message);
-    } else {
-      // console.log(results);
-      res.json("Want Skill Added Successfully");
-    }
-  });
+  const videoFile = fileName;
+  const serviceOffer = req.body.serviceOffer; 
+    const sql = `INSERT INTO  onlineclass_reg (user_id, classname, conductedby, currency,payment, videotutorial,skills) VALUES (7,"${className}", "${serviceOffer}", "${currency}", "7","${videoFile}","${skillName}" )`;
+//   console.log(sql);
+  connection.query(sql, function (err, results ,fields) {
+      if (err) {
+        console.log(err.message);
+      } else {
+        // console.log(results);
+        res.json("Want Skill Added Successfully");
+      }
+     } );
+  
 });
 
 // app.post('/addSaleSkill', function(req, res) {
