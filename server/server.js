@@ -461,22 +461,28 @@ const storage = multer.diskStorage({
 // });
 
 app.post("/addSaleSkill",(req,res)=>{
+  console.log(req.body);
   var fileName;
-    if(req.files){
+  let uploadStatus = false;
+  let uploadUrl = '';
+  // console.log(file);
+  // console.log(req.files);
+  if(req.files){
       
-      var file = req.files.file;
-      fileName = file.name;
-      console.log(fileName);
-      file.mv('./upload/video/'+fileName,function(err){
-        if (err){          
-            res.send(err);          
-        }else{
-          res.send("file Uploaded")
-        }
+    var file = req.files.file;
+    fileName = file.name;
+    // console.log(fileName);
+    file.mv('./upload/video/'+fileName,function(err){
+      if (err){          
+          //res.send(err);          
+      }else{
+        uploadStatus = true;
+        //res.send("file Uploaded")
+      }
 
-      })
-    
-    }
+    })
+  
+  } 
     
   const user_id = req.body.userId;
   const className = req.body.className;
@@ -485,7 +491,11 @@ app.post("/addSaleSkill",(req,res)=>{
   const payment = req.body.payment;
   const videoFile = fileName;
   const serviceOffer = req.body.serviceOffer; 
-    const sql = `INSERT INTO  onlineclass_reg (user_id, classname, conductedby, currency,payment, videotutorial,skills) VALUES (7,"${className}", "${serviceOffer}", "${currency}", "7","${videoFile}","${skillName}" )`;
+
+
+  
+
+    const sql = `INSERT INTO  onlineclass_reg (user_id, classname, conductedby, currency,payment, videotutorial,skills) VALUES (${user_id},"${className}", "${serviceOffer}", "${currency}", "${payment}","${videoFile}","${skillName}" )`;
 //   console.log(sql);
   connection.query(sql, function (err, results ,fields) {
       if (err) {
