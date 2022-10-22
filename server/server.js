@@ -3,9 +3,10 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const mysql = require("mysql2");
 const fileUpload = require('express-fileupload');
-const multer  = require('multer')
+const multer  = require('multer');
 const { uuid } = require('uuidv4');
 const  path = require('path');
+const { query } = require("express");
 
 
 const connection = mysql.createConnection({
@@ -28,15 +29,15 @@ app.use(fileUpload());
 
 
 //get user details
-app.get("/userDetails/:userId", (req, res) => {
-  connection.query(
-    "SELECT * FROM `skill_users` WHERE id=394",
-    function (err, results, fields) {
-      res.json(results);
-    }
-  );
-  // res.json({results});
-});
+// app.get("/userDetails/:userId", (req, res) => {
+//   connection.query(
+//     "SELECT * FROM `skill_users` WHERE id=394",
+//     function (err, results, fields) {
+//       res.json(results);
+//     }
+//   );
+//   // res.json({results});
+// });
 
 app.post("/dashboard", (req, res) => {
   // console.log(req);
@@ -75,16 +76,11 @@ app.get("/category/", (req, res) => {
   // res.json({results});
 });
 
+
 app.get("/subCategory/:categoryId", (req, res) => {
-  // console.log(req.body);
-
   const categoryId = req.params.categoryId;
-
-  // connection.query(
-  const sql1 = `SELECT * FROM sub_cat WHERE cat_id = ${categoryId} `;
-  //console.log(sql1);
-
-  connection.query(sql1, function (err, results, fields) {
+  const sql = `SELECT * FROM sub_cat WHERE cat_id = ${categoryId} `;
+  connection.query(sql, function (err, results, fields) {
     if (err) {
       console.log(err.message);
     } else {
@@ -95,6 +91,45 @@ app.get("/subCategory/:categoryId", (req, res) => {
   // //  )
   //   res.json({results});
 });
+
+//get country list data
+app.get("/country/", (req,res) =>{
+  connection.query(
+    "SELECT * FROM `geo_countries` ORDER BY `name` ASC",
+    function (err, results, fields) {
+      
+      res.json(results);
+    }
+  )
+});
+
+//get state list
+app.get("/state/:countryNameId", (req, res)=>{
+  const countryId = req.params.countryNameId;
+  const sql = `SELECT * FROM geo_states WHERE geo_states.con_id = ${countryId}`;
+  connection.query(sql, function(err, results, fields){
+    if(err){
+      console.log(err);
+    }else{
+      res.json(results)
+    }
+  })
+
+});
+
+//get city list
+app.get("/city/:stateNameId", (req, res) => {
+   const stateId = req.params.stateNameId;
+   const sql = `SELECT * FROM geo_cities WHERE geo_cities.sta_id = ${stateId}`;
+   connection.query(sql, function(err, results,fields){
+    if(err){
+      console.log(err);
+    }else{
+      console.log(results);
+      res.json(results);
+    }
+   }) 
+})
 
 // category id  insert in skill_got table
 app.get("/skillCatIdUpdate", (req, res) => {
@@ -293,11 +328,10 @@ app.delete("/delete/:skillId", (req, res) => {
 app.get("/wantSkill/:userId", (req, res) => {
   const currentUserId = req.params.userId;
 
-  const sql = `SELECT skill_wants.id AS skillId, skill_wants.user_id AS user_id, skill_wants.country AS country,skill_wants.cat_id AS cat_id, skill_wants.s_cat_id AS s_cat_id, skill_wants.level AS wishesTo, categories.cat_name AS cat_name, sub_cat.s_cat_name AS s_cat_name FROM skill_wants LEFT JOIN categories ON categories.id = skill_wants.cat_id LEFT JOIN sub_cat ON   sub_cat.id = skill_wants.s_cat_id WHERE skill_wants.user_id = ${currentUserId}
+  const sql = `SELECT skill_wants.id AS skillId, skill_wants.user_id AS user_id, skill_wants.country AS country,skill_wants.cat_id AS cat_id, skill_wants.s_cat_id AS s_cat_id, skill_wants.level AS wishesTo, categories.cat_name AS cat_name, sub_cat.s_cat_name AS s_cat_name FROM skill_wants LEFT JOIN categories ON categories.id = skill_wants.cat_id LEFT JOIN sub_cat ON sub_cat.id = skill_wants.s_cat_id WHERE skill_wants.user_id = ${currentUserId}
              `;
   //
 
-  //console.log(sql);
   connection.query(sql, function (err, results, fields) {
     if (err) {
       console.log(err.message);
@@ -378,7 +412,7 @@ app.delete("/WantSkilldelete/:wantSkillId", (req, res) => {
   const sql1 = `DELETE FROM skill_wants WHERE id = ${wantSkillId} `;
   //console.log(sql1);
 
-  connection.query(sql1, function (err, results, fields) {
+  connection.query(sql1, function (err, res, fields) {
     if (err) {
       console.log(err.message);
     } else {
@@ -397,7 +431,7 @@ app.get("/getSkillSale/:userId", (req, res) => {
 
   const sql = `SELECT * FROM onlineclass_reg WHERE onlineclass_reg.user_id = ${currentUserId} 
               `;
-
+  console.log(sql)
   connection.query(sql, function (err, results, fields) {
     if (err) {
       console.log(err.message);
@@ -461,17 +495,12 @@ const storage = multer.diskStorage({
 // });
 
 app.post("/addSaleSkill",(req,res)=>{
-  console.log(req.body);
   var fileName;
   let uploadStatus = false;
-  let uploadUrl = '';
-  // console.log(file);
-  // console.log(req.files);
-  if(req.files){
-      
+  let uploadUrl;
+  if(req.files){      
     var file = req.files.file;
     fileName = file.name;
-    // console.log(fileName);
     file.mv('./upload/video/'+fileName,function(err){
       if (err){          
           //res.send(err);          
@@ -491,52 +520,144 @@ app.post("/addSaleSkill",(req,res)=>{
   const payment = req.body.payment;
   const videoFile = fileName;
   const serviceOffer = req.body.serviceOffer; 
-
-
   
 
     const sql = `INSERT INTO  onlineclass_reg (user_id, classname, conductedby, currency,payment, videotutorial,skills) VALUES (${user_id},"${className}", "${serviceOffer}", "${currency}", "${payment}","${videoFile}","${skillName}" )`;
-//   console.log(sql);
-  connection.query(sql, function (err, results ,fields) {
+    connection.query(sql, function (err, results ,fields) {
       if (err) {
         console.log(err.message);
       } else {
-        // console.log(results);
         res.json("Want Skill Added Successfully");
       }
      } );
   
 });
 
-// app.post('/addSaleSkill', function(req, res) {
-//   let sampleFile;
-//   let uploadPath;
-//   console.log(req.body.videoFile);
+//End Sale skill
 
-//   // if (!req.files || Object.keys(req.files).length === 0) {
-//   //   return res.status(400).send('No files were uploaded.');
-//   // }
+//start user details
+app.get('/userdetails/:userId', (req, res)=>{
+  const currentUserId = req.params.userId;
 
-//   // The name of the input field (i.e. "sampleFile") is used to retrieve the uploaded file
-//   sampleFile = req.body.videoFile;
-//   uploadPath = __dirname + '/upload/' + sampleFile;
-//   console.log(uploadPath);
-//   // Use the mv() method to place the file somewhere on your server
-//   sampleFile.mv(uploadPath, function(err) {
-//     if (err)
-//       return res.status(500).send(err);
+  const sql = `SELECT users.active_account AS activeDetails, users.address AS Address, users.bod AS bod, users.borough AS borough, users.business AS business, users.company AS company, users.emailid AS emailId, users.fname AS firstName, users.gender AS gender, users.id AS userId, users.lname AS lastName, users.password AS password, users.phone AS phone, users.rates AS rates, users.regtime AS regtime, users.school AS school, users.town AS town, users.username AS userName, users.village AS village, users.work AS work, users.zip AS zip,users.licenses AS licenses,users.experiences AS experiences,users.qualifications AS qualifications, users.country AS countryId , users.state AS stateId, users.city AS cityId , country.name AS countryName, states.name AS statesName, cities.name AS citiesName FROM skill_users AS users LEFT JOIN geo_countries AS country ON country.con_id = users.country LEFT JOIN geo_states AS states ON states.sta_id = users.state LEFT JOIN geo_cities AS cities ON cities.cty_id = users.city  WHERE users.id =  ${currentUserId}  
+  `;
+  connection.query(sql, function (err, results, fields) {
+    if (err) {
+      console.log(err.message);
+    } else {
 
-//     res.send('File uploaded!');
-//   });
-// });
+      res.json(results);
+
+    }
+  });
+});
+
+
+//get user friend list
+
+app.get('/friends/:userId', (req, res)=>{
+  const currentUserId = req.params.userId;
+
+  const sql = `SELECT a.id, b.username, b.work, b.gender  FROM invite AS a RIGHT JOIN skill_users AS b ON a.email = b.id WHERE a.user_Id = ${currentUserId} AND a.accept ="yes" AND a.m_block = '0'`;
+  connection.query(sql, function(err, results, fields){
+    if (err) {
+      console.log(err.message);
+    } else {
+
+      res.json(results);
+
+    }
+  })
+});
+
+//unfried request
+
+app.delete('/unfriend/:id', (req, res)=>{
+  const friendId = req.params.id;
+  // console.log(friendId);
+  const sql = `DELETE FROM invite WHERE id = ${friendId}`;
+  // console.log(sql);
+  connection.query(sql, function (err, results, fields) {
+    if (err) {
+      console.log(err.message);
+    } else {
+      //console.log(results);
+      res.json("Removed this user in friend list");
+    }
+  });
+  
+});
+
+//block the user
+app.put('/userBlock',(req, res)=>{
+  const friendId = req.body.id;
+  const blocked = req.body.blocknumber;
+
+  const sql = `UPDATE  invite SET m_block =${blocked} WHERE id=${friendId}`;
+
+  connection.query(sql, function(err, results, fields){
+    if(err){
+      console.log(err.msg);
+    }else{
+      res.json('blocked the user');
+    }
+  })
+});
+
+
+
+// get friend request list
+app.get('/friendRequest/:userId', (req, res) => {
+  const currentUserId = req.params.userId;
+
+  const sql =`SELECT b.username, b.work, b.gender  FROM invite AS a RIGHT JOIN skill_users AS b ON a.email = b.id WHERE a.user_Id = ${currentUserId} AND a.accept ="no"`
+  connection.query(sql, function(err, results, fields){
+    if (err) {
+      console.log(err.message);
+    } else {
+      res.json(results);
+
+    }
+  })
+
+});
+
+//get userName list
+app.get('/userNamelist',(req,res) =>{
+
+  const sql =  `SELECT username FROM skill_users`;
+  connection.query(sql, function(err, result, fields){
+    if(err){
+      console.log(err.message);
+    } else{
+
+      res.json(result);
+    }
+  })
+});
+
+//get specific user
+
+app.get('/user/:user',(req,res) =>{
+ const user = req.params.user;
+ 
+
+  const sql = `SELECT * FROM skill_users WHERE skill_users.username LIKE "%${user}%" `;
+  connection.query(sql, function(err, result, fields){
+    if(err){
+      console.log(err);
+    }else{
+      res.json(result);
+    }
+  })
+});
+
 
 
 
 app.post("/skills", (req, res) => {
   res.json({ data: "Welcome2" });
 });
-
-//file upload
 
 
 
