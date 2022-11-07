@@ -125,7 +125,6 @@ app.get("/city/:stateNameId", (req, res) => {
     if(err){
       console.log(err);
     }else{
-      console.log(results);
       res.json(results);
     }
    }) 
@@ -259,6 +258,7 @@ app.get("/skills/:userId", (req, res) => {
 //Add user skills
 
 app.post("/addSkill", (req, res) => {
+  console.log('post');
   const user_id = req.body.userId;
   const cat_id = req.body.categoryId;
   const subCategoryId = req.body.subCategoryId;
@@ -267,7 +267,8 @@ app.post("/addSkill", (req, res) => {
   const wishes = req.body.wishes;
   const countryId = req.body.countryId;
 
-  const sql = `INSERT INTO skill_got (user_id, cat_id, s_cat_id, level1, level2,level3, country) VALUES (${user_id},${cat_id}, "${subCategoryId}", "${skillLevel}","${teachLevel}", "${wishes}", ${countryId} )`;
+  const sql = `INSERT INTO skill_got (user_id, cat_id, level1, level2,level3, country, s_cat_id) VALUES (${user_id}, ${cat_id}, "${skillLevel}", "${teachLevel}", "${wishes}", ${countryId}, '${subCategoryId}' )`;
+  console.log(sql);
   connection.query(sql, function (err, results, fields) {
     if (err) {
       console.log(err.message);
@@ -288,7 +289,7 @@ app.put("/skillUpdate", (req, res) => {
   const teachLevel = req.body.teachLevel;
 
   const sql = `UPDATE skill_got SET cat_id=${cat_id}, s_cat_id= ${subCategoryId}, level1="${skillLevel}", level2="${teachLevel}", level3="${selectWishes}" WHERE id= ${skillId}`;
-  connection.query(sql, function (err, results, fields) {
+  connection.query(sql, function (err, results, fields) { 
     //console.log(sql);
 
     if (err) {
@@ -371,7 +372,7 @@ app.put("/wantSkillUpdate", (req, res) => {
   const selectWishes = req.body.selectWishes; 
   const subCategoryId = req.body.subCategoryId;
 
-  const sql = `UPDATE skill_wants SET cat_id=${cat_id}, s_cat_id= ${subCategoryId},  level="${selectWishes}" WHERE id= ${skillId}`;
+  const sql = `UPDATE skill_wants SET cat_id=${cat_id}, s_cat_id= "${subCategoryId}",  level="${selectWishes}" WHERE id= ${skillId}`;
   connection.query(sql, function (err, results, fields) {
 
     if (err) {
@@ -391,9 +392,8 @@ app.post("/addWantSkill", (req, res) => {
   const subCategoryId = req.body.subCategoryId;  
   const wishes = req.body.wishes;
   const countryId = req.body.countryId;
-  //console.log(countryId);
 
-  const sql = `INSERT INTO skill_wants (user_id, cat_id, s_cat_id, level, country) VALUES (${user_id},${cat_id}, "${subCategoryId}", "${wishes}", ${countryId} )`;
+  const sql = `INSERT INTO skill_wants (user_id, cat_id, level, country, s_cat_id ) VALUES (${user_id},${cat_id}, "${wishes}", ${countryId}, '${subCategoryId}' )`;
   connection.query(sql, function (err, results, fields) {
     if (err) {
       console.log(err.message);
@@ -409,10 +409,10 @@ app.delete("/WantSkilldelete/:wantSkillId", (req, res) => {
   const wantSkillId = req.params.wantSkillId;
 
   // connection.query(
-  const sql1 = `DELETE FROM skill_wants WHERE id = ${wantSkillId} `;
+  const sql = `DELETE FROM skill_wants WHERE id = ${wantSkillId} `;
   //console.log(sql1);
 
-  connection.query(sql1, function (err, res, fields) {
+  connection.query(sql, function (err, results, fields) {
     if (err) {
       console.log(err.message);
     } else {
@@ -431,7 +431,6 @@ app.get("/getSkillSale/:userId", (req, res) => {
 
   const sql = `SELECT * FROM onlineclass_reg WHERE onlineclass_reg.user_id = ${currentUserId} 
               `;
-  console.log(sql)
   connection.query(sql, function (err, results, fields) {
     if (err) {
       console.log(err.message);
@@ -463,7 +462,6 @@ const storage = multer.diskStorage({
     cb(null, './upload')
   },
   filename: (req,file, cb)=>{
-    console.log(file);
     cb(null,Date.now() + path.extname(file.originalname))
 
   }
@@ -497,7 +495,7 @@ const storage = multer.diskStorage({
 app.post("/addSaleSkill",(req,res)=>{
   var fileName;
   let uploadStatus = false;
-  let uploadUrl;
+  let uploadUrl;  
   if(req.files){      
     var file = req.files.file;
     fileName = file.name;
@@ -552,6 +550,34 @@ app.get('/userdetails/:userId', (req, res)=>{
   });
 });
 
+app.put('/updateUserDetails',(req, res)=>{
+  const userId = req.body.userId;
+  const cityId = req.body.cityId;
+  const countryId = req.body.countryId;
+  const stateId = req.body.stateId;
+  const companyName = req.body.companyName;
+  const experience = req.body.experience;
+  const gender = req.body.gender;
+  const licenses = req.body.licenses;
+  const password = req.body.password;
+  const qualifications = req.body.qualifications;
+  const rates = req.body.rates;
+  const schoolName = req.body.schoolName;
+  const work = req.body.work;
+
+
+
+  const sql = `UPDATE skill_users SET password ='${password}', gender='${gender}', work='${work}',company='${companyName}', qualifications='${qualifications}', school='${schoolName}', licenses='${licenses}',experiences='${experience}', rates='${rates}', city=${cityId}, state=${stateId}, country=${countryId} WHERE id=${userId}`;
+
+  connection.query(sql, function(err, results, fields){
+    if(err){
+      console.log(err.msg);
+    }else{
+      res.json('user details updated');
+    }
+  })
+});
+
 
 //get user friend list
 
@@ -604,13 +630,46 @@ app.put('/userBlock',(req, res)=>{
   })
 });
 
+//Unblock the user
+app.put('/unBlock',(req, res)=>{
+  const friendId = req.body.requestId;
+  const blocked = req.body.block;
 
+  const sql = `UPDATE  invite SET m_block =${blocked} WHERE id=${friendId}`;
+
+  connection.query(sql, function(err, results, fields){
+    if(err){
+      console.log(err.msg);
+    }else{
+      res.json('blocked the user');
+    }
+  })
+});
+
+
+//friend request accept
+
+
+app.put('/requestAccept',(req, res)=>{
+  const requestId = req.body.id;
+  const accept = req.body.accept;
+
+  const sql = `UPDATE invite SET accept ='${accept}' WHERE id=${requestId}`;
+
+  connection.query(sql, function(err, results, fields){
+    if(err){
+      console.log(err.msg);
+    }else{
+      res.json('Accept the user');
+    }
+  })
+});
 
 // get friend request list
 app.get('/friendRequest/:userId', (req, res) => {
   const currentUserId = req.params.userId;
 
-  const sql =`SELECT b.username, b.work, b.gender  FROM invite AS a RIGHT JOIN skill_users AS b ON a.email = b.id WHERE a.user_Id = ${currentUserId} AND a.accept ="no"`
+  const sql =`SELECT b.username, b.work, b.gender, a.id AS requestId  FROM invite AS a RIGHT JOIN skill_users AS b ON a.email = b.id WHERE a.user_Id = ${currentUserId} AND a.accept ="no"`
   connection.query(sql, function(err, results, fields){
     if (err) {
       console.log(err.message);
@@ -651,6 +710,22 @@ app.get('/user/:user',(req,res) =>{
     }
   })
 });
+
+
+//get user blocked list
+app.get('/blockedList/:userId', (req, res)=>{
+  const userId = req.params.userId;
+
+  const sql =`SELECT b.username, b.work, b.gender, a.id AS requestId  FROM invite AS a RIGHT JOIN skill_users AS b ON a.email = b.id WHERE a.user_Id = ${userId} AND a.m_block ="1"`;
+
+  connection.query(sql, function(err, result, fields){
+    if(err){
+      console.log(err);
+    }else{
+      res.json(result);
+    }
+  })
+})
 
 
 
