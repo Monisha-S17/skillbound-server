@@ -727,7 +727,62 @@ app.get('/blockedList/:userId', (req, res)=>{
   })
 })
 
+//get online class list
+app.get('/onlineClassList',(req,res)=>{
+  const sql =`SELECT class.user_id, class.classname, class.conductedby, class.currency, class.payment, user.username, user.gender From onlineclass_reg AS class  JOIN skill_users AS user ON class.user_id = user.id WHERE class.conductedby='on skype'`;
 
+  connection.query(sql, function(err,result, fields){
+    if(err){
+      console.log(err);
+    }else{
+      res.json(result);
+    }
+  })
+})
+
+//get skillbound chat list
+
+app.get('/skillboundChat', (req,res)=>{
+  const sql =`SELECT class.user_id, class.classname, class.conductedby, class.currency, class.payment, user.username, user.gender From onlineclass_reg AS class  JOIN skill_users AS user ON class.user_id = user.id WHERE class.conductedby='on skillbound chat'`;
+
+  connection.query(sql, function(err,result, fields){
+    if(err){
+      console.log(err);
+    }else{
+      res.json(result);
+    }
+  })
+})
+
+//get all classes list
+
+app.get('/allClassList', (req,res)=>{
+  const sql =`SELECT class.user_id, class.classname, class.conductedby, class.currency, class.payment, user.username, user.gender From onlineclass_reg AS class  JOIN skill_users AS user ON class.user_id = user.id WHERE class.conductedby='in person'`;
+
+  connection.query(sql, function(err,result, fields){
+    if(err){
+      console.log(err);
+    }else{
+      res.json(result);
+    }
+  })
+})
+
+// get skillLetters using skill list
+app.get('/skillLetters/:letter', (req,res)=>{
+  const letter = req.params.letter;
+  // const sql =`SELECT category.id AS categoryId, category.cat_name AS categoryName FROM categories AS category WHERE category.cat_name LIKE '${letter}% ' AND category.id = (SELECT *  )  `;
+
+  const sql =`SELECT gotSkill.*,user.id as user_id, user.username, user.profile_photo,user.gender, city.name AS city_name, state.name AS state_name, country.name AS country_name FROM skill_got gotSkill, skill_users user, geo_cities city, geo_states state, geo_countries country where gotSkill.user_id = user.id and user.country = country.con_id and user.city = city.cty_id and user.state = state.sta_id and category like '${letter}%' order by category asc`;
+
+  connection.query(sql, function(err,result, fields){
+    if(err){
+      console.log(err);
+    }else{
+      res.json(result);
+    }
+  })
+})
 
 
 app.post("/skills", (req, res) => {
